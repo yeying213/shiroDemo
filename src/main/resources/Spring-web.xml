@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:annation="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <annation:config/>
+    <!--
+     研究的是<mvc:annotation-driven/>标签，所以我们找到对应的实现类是org.springframework.web.servlet.config.AnnotationDrivenBeanDefinitionParser。
+    通过阅读类注释文档，我们发现这个类主要是用来向工厂中注册了
+
+RequestMappingHandlerMapping
+
+BeanNameUrlHandlerMapping
+
+RequestMappingHandlerAdapter
+
+HttpRequestHandlerAdapter
+
+SimpleControllerHandlerAdapter
+
+ExceptionHandlerExceptionResolver
+
+ResponseStatusExceptionResolver
+
+DefaultHandlerExceptionResolver
+
+    -->
+    <!-- 装配好FreeMaker基础设施-->
+    <bean id="castorMarshaller" class="org.springframework.oxm.castor.CastorMarshaller"/>
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
+            <bean class="org.springframework.http.converter.ResourceHttpMessageConverter"/>
+            <!-- 读写二进制数据
+             其中T为 byte[]类型，可读取所有请求类型，可以通过设置supported指定媒体类型
+             响应的媒体类型为application/octet-stream
+            -->
+            <bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter">
+                <property name="defaultCharset" value="UTF-8"/>
+            </bean>
+            <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter"/>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <!--是否对输出的格式数据进行美化 -->
+                <property name="prettyPrint" value="true"></property>
+                <property name="objectMapper">
+                    <bean class="com.fasterxml.jackson.databind.ObjectMapper">
+                        <property name="dateFormat">
+                            <bean class="java.text.SimpleDateFormat">
+                                <constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss" />
+                            </bean>
+                        </property>
+                    </bean>
+                </property>
+            </bean>
+            <!-- 将java对象转化成xml,或者将xml解析成java,读写xml信息
+             响应类型为text/html. application/xml
+            -->
+            <bean class="org.springframework.http.converter.xml.MarshallingHttpMessageConverter">
+                <property name="marshaller" ref="castorMarshaller"></property>
+            </bean>
+            <bean class="org.springframework.http.converter.FormHttpMessageConverter"/>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <!-- 2静态资源处理配置
+    1.加入对静态资源的处理，因为我们配置为拦截所有的请求，而有些静态资源找不到对应的handler
+    2.允许使用“/”做整体映射
+    -->
+    <mvc:default-servlet-handler/>
+    <!-- 配置ViewResolver。 可以用多个ViewResolver。 使用order属性排序。
+    InternalResourceViewResolver放在最后。
+    RESTful服务中很重要的一个特性即是同一资源,多种表述我们使用ContentNegotiatingViewResolver就可以做到，
+    这个视图解析器允许你用同样的内容数据来呈现不同的view
+    accept header,扩展名以及参数这三种方式
+    第一种使用扩展名：
+    http://www.test.com/user.xml    呈现xml文件
+    http://www.test.com/user.json    呈现json格式
+    http://www.test.com/user       使用默认view呈现，比如jsp等
+
+    方式2  使用http request header的Accept
+         GET /user HTTP/1.1
+         Accept:application/xml
+         GET /user HTTP/1.1
+         Accept:application/json
+     方式3  使用参数
+     http://www.test.com/user?format=xml
+     http://www.test.com/user?format=json
+     ….
+    -->
+    <!-- 2静态资源处理配置
+    1.加入对静态资源的处理，因为我们配置为拦截所有的请求，而有些静态资源找不到对应的handler
+    2.允许使用“/”做整体映射
+    当在web.xml 中DispatcherServlet使用<url-pattern>/</url-pattern> 映射时，
+    能映射静态资源（当Spring Web MVC框架没有处理请求对应的控制器时（如一些静态资源），
+    转交给默认的Servlet来响应静态文件，否则报404找不到资源错误，）。
+    -->
+    <mvc:default-servlet-handler/>
+    <!-- 该视图解析器 不负责具体的视图的解析，而是作为一个中间人的角色根据请求处理
+     所要求的MIME类型，从上下文里面选择一个合适的视图解析器，再将视图解析工作委托其职责
+     每个视图解析器都实现了一个Order接口，开放出一个orderNo属性，可以通过orderNo属性来指定
+     视图的优先级，orderNo值越小优先级越高，有些视图解析器默认为最低级别如InterViewResolver
+     SpringMVC会按照视图解析器的优先级别顺序对逻辑视图名进行解析，直到解析成功并返回视图对象，否则抛出
+     ServletException异常
+    -->
+    <bean id="contentNegotiationManager" class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+        <property name="ignoreAcceptHeader" value="true"/>
+        <property name="favorPathExtension" value="true"/>
+        <property name="defaultContentType" value="text/html"/>
+        <property name="favorParameter" value="true"/>
+        <property name="mediaTypes">
+            <map>
+                <entry key="xml" value="application/xml"/>
+                <entry key="json" value="text/plain"/>
+                <entry key="xls" value="application/vnd.ms-excel"/>
+            </map>
+        </property>
+        <!--
+         这里是是否启用扩展名支持，默认就是true
+         例如  /user/{userid}.json
+        -->
+        <!--<property name="favorPathExtension" value="true"/>-->
+        <!--这里是是否启用参数支持，默认就是true-->
+        <!--例如  /user/{userid}?format=json-->
+        <!--<property name="favorParameter" value="true"/>-->
+        <!--这里是否忽略掉accept header，默认就是false-->
+        <!--例如     GET /user HTTP/1.1-->
+        <!--Accept:application/json-->
+        <!--<property name="ignoreAcceptHeader" value="true"/>-->
+        <!-- 如果所有的mediaType都没匹配上，就会使用defaultContentType
+        <property name="defaultContentType" value="TEXT_HTML"/>
+        -->
+    </bean>
+    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <property name="order" value="1"/>
+        <property name="contentNegotiationManager" ref="contentNegotiationManager"/>
+        <property name="viewResolvers">
+            <list>
+                <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"/>
+            </list>
+        </property>
+        <property name="defaultViews">
+            <list>
+                <!-- JSON View -->
+                <!-- <property name="extractValueFromSingleKeyModel" value="true"/> -->
+                <bean class="com.alibaba.fastjson.support.spring.FastJsonJsonView">
+                    <!-- <property name="extractValueFromSingleKeyModel" value="true"/> -->
+                    <property name="charset" value="UTF-8"/>
+                </bean>
+                <bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+                    <constructor-arg ref="castorMarshaller">
+                    </constructor-arg>
+                </bean>
+                <!-- 自定义特定的视图解析技术  或者引入第三方库
+                <bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+                    <constructor-arg ref="jaxb2Marshaller">
+
+                    </constructor-arg>
+                </bean>
+                <bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+                    <constructor-arg ref="jaxb2Marshaller">
+
+                    </constructor-arg>
+                </bean>
+                <bean class="com.wonders.stpt.bid.controller.JXLExcelView"/>
+                -->
+            </list>
+        </property>
+    </bean>
+    <!-- 国际化-->
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename" value="i18n.message"/>
+    </bean>
+    <!-- 扫描web相关的配置-->
+    <context:component-scan base-package="org.shrio.controller"/>
+</beans>

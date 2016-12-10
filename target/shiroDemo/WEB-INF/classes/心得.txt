@@ -1,0 +1,69 @@
+1.http://blog.csdn.net/qq924862077/article/details/52612589
+（关于mybaits经典知识的梳理和整理）
+2.http://blog.csdn.net/tzs_1041218129/article/details/53449052
+（通过项目逐渐深入理解mybaits系列经典文摘）
+
+wordpress逆向生成数据库
+http://blog.csdn.net/ppiao1970hank/article/details/6301812
+
+
+…………………………………………………………………………………………………………………………………………………………
+
+接下来自己做的博客需求：参加下面来完成就可以了。
+http://www.xiaotublog.com/blog/articles/20.html
+
+总结分析resultType、resultMap、延迟加载使用场景
+延迟加载：如果查询单表可以满足需求，先查询单表，如果
+需要关联信息时候再次进行查询
+jsp页面显示用户，当鼠标显示在订单时候显示用户订单信息
+
+
+mybaits具有一级和二级缓存
+1.其中，一级缓存是基于sqlSession级别的，
+2.二级缓存是基于mapper级别的，跨越了sqlsession
+sqlSession是一个操作数据库的对象，但是不管哪个sqlSession
+都是可以操作mapper里面的statement
+也就是我们可以定义多个sqlSession，但是对于mapper级别的东西我们是
+可以共享的
+sqlSession只能访问自己的一级缓存的数据
+
+java虚拟机内存模型
+http://www.jianshu.com/p/11024d2862dd
+
+
+springMVC多视图解析策略：
+1.根据accept-header的参数esolveViewName中根据方法getMediaTypes获取mediaType（由accept-header、请求参数或后缀名中获取），
+springmvc每个view的默认contentType为text/html）
+2.根据选择中的根据访问的viewname与mediaType
+查找候选视图集合candidateViews
+3.据方法getBestView获取最优视图并返回
+4.ContentNegotiatingViewResolver 中包含2个属性
+  a.contentNegotiationManager
+   这个里面包含了一系列视图解析策略，主要分成三种：
+   List<ContentNegotiationStrategy> strategies;一系列视图解析策略
+   1.根据后缀，2,。根据参数，3.根据请求头（通过accept-header匹配 content-type）
+
+  b.viewResolvers
+5.获知具体的视图类型后，然后调用对应的消息转换器进行消息转换处理，获得期望的媒体类型。输出
+6.然后需要在defaultView里面增加对应视图的解析器
+getCandidateViews方法根据XML中预设的viewResolvers匹配1中的MediaType获取候选View，
+同时增加XML中defaultViews中的view。每个view都有对应的content-type，大部分的视图继承于AbstractView，
+默认值都是text/html;charset=ISO-8859-1。有些特定视图，比如MappingJackson2JsonView会重设contentType
+为application/json。每个view中的contentType在最后匹配中都会实际用到，所以很重要。
+在此方法中，会调用每一个viewResolvers的resolveViewName方法创建view，需要传入的参数为viewname与locale，
+
+
+/**
+   详细的解释分析见博客：http://blog.csdn.net/z69183787/article/details/41696709
+*/
+
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+另外还有一种自定义视图解析器的方式
+自定义viewResolver加入 ContentNegotiatingViewResolver的ViewResolvrers
+http://blog.csdn.net/w605283073/article/details/51338388
+
+
+第三种：
+http://www.cnblogs.com/fangjian0423/p/springMVC-xml-json-convert.html

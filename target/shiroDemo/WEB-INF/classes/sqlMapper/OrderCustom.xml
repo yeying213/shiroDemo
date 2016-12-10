@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.shrio.mapper.OrderCustomMapper">
+    <!--使用resultType完成关联查询
+    一对一 关联查询映射
+    -->
+    <select id="quryOrdersCustomList" resultType="org.shrio.vo.OrderCustom">
+        SELECT
+        orders.id,
+        orders.user_id,
+        orders.number,
+        orders.createtime,
+        orders.note,
+        `user`.username,
+        `user`.sex,
+        `user`.address
+        FROM
+        orders
+        INNER JOIN `user` ON orders.user_id = `user`.id
+    </select>
+    <resultMap id="OdersUserResultMap" type="Orders" extends="org.shrio.mapper.OrdersMapper.BaseResultMap">
+        <!-- 完成用户关联单个订单
+        association:完成关联映射到单个的pojo
+        property:要将关联信息映射到orders的那个属性里中
+        javaType：需要映射的oders属性的类型，也就是user的类型
+        对比resultType:需要自定义pojo保证查询列和pojo属性相互对应，这种写法相对简单
+        所以应用广泛
+        -->
+        <association property="user" javaType="User">
+            <id property="id" column="id"/>
+            <result property="username" column="username"/>
+            <result property="address" column="address"/>
+            <result property="sex" column="sex"/>
+        </association>
+    </resultMap>
+    <resultMap id="OdersDetailsResultMap" type="Orders" extends="OdersUserResultMap">
+        <!-- 完成订单明细的映射
+         万分注意此处写的sql字段映射要和查询时候显示的sql字段吻合
+         特别注意有时候为了区别，使用了别名，具体映射的时候需要替换成为相应的别名
+         使用ResultMap可以达到去除重复的效果
+        -->
+        <collection property="oderdetails" ofType="Orderdetail" >
+            <id column="orderdetailId" property="id"/>
+            <result column="items_num" property="itemsNum"/>
+            <result column="items_id" property="itemsId"/>
+        </collection>
+    </resultMap>
+    <select id="quryOrdersCustomListResultMap" resultMap="OdersUserResultMap">
+        SELECT
+        orders.id,
+        orders.user_id,
+        orders.number,
+        orders.createtime,
+        orders.note,
+        `user`.username,
+        `user`.sex,
+        `user`.address
+        FROM
+        orders
+        INNER JOIN `user` ON orders.user_id = `user`.id
+    </select>
+    <select id="OdersAndOrderDetails" resultMap="OdersDetailsResultMap">
+        SELECT
+        orders.id,
+        orders.user_id,
+        orders.number,
+        orders.createtime,
+        orders.note,
+        `user`.username,
+        `user`.sex,
+        `user`.address,
+        orderdetail.items_num,
+        orderdetail.items_id,
+        orderdetail.id orderdetailId
+        FROM
+        orders,
+        `user`,
+        orderdetail
+        WHERE
+        orders.user_id = `user`.id
+        AND orderdetail.orders_id = orders.id
+    </select>
+    <!--
+     下面再次增加一对多复杂点的
+     查询所有的用户信息，关联查询订单和订单明细以及商品信息
+
+     分析：确定主查询表是用户信息
+     关联查询是订单明细
+      从数据库看只有一位测试用户，因此
+      最终的映射结果只有一条
+      在User里面创建映射集合属性  List<Orders> orders;
+      再在Orders创建集合属性  private List<Orderdetail> oderdetails;
+      再在OrderDetails里面创建商品的属性：private Items item; 一个订单明细对应一个商品
+     -->
+    <resultMap id="userAndOrdrsAndOrdetailsAndItemsMap" type="User">
+        <!--
+          1.完成用户信息的映射
+          2.订单信息的映射
+          3.订单明细
+          4.商品信息
+        -->
+        <id column="user_id" property="id"/>
+        <result property="username" column="username"/>
+        <result property="address" column="address"/>
+        <result property="sex" column="sex"/>
+        <collection property="orders" ofType="Orders">
+            <id column="id" property="id" jdbcType="INTEGER" />
+            <result column="user_id" property="userId" jdbcType="INTEGER" />
+            <result column="number" property="number" jdbcType="VARCHAR" />
+            <result column="createtime" property="createtime" jdbcType="TIMESTAMP" />
+            <result column="note" property="note" jdbcType="VARCHAR" />
+            <collection property="oderdetails" ofType="Orderdetail">
+                <id column="orderdetailId" property="id"/>
+                <result column="items_num" property="itemsNum"/>
+                <result column="items_id" property="itemsId"/>
+                <association property="item" javaType="Items">
+                    <id column="items_id" property="id"/>
+                    <result column="items_name" property="name"/>
+                    <result column="items_detail" property="detail"/>
+                </association>
+            </collection>
+        </collection>
+    </resultMap>
+    <select id="userAndOrdrsAndOrdetailsAndItems" resultMap="userAndOrdrsAndOrdetailsAndItemsMap">
+        SELECT
+        orders.id,
+        orders.user_id,
+        orders.number,
+        orders.createtime,
+        orders.note,
+        `user`.username,
+        `user`.sex,
+        `user`.address,
+        orderdetail.items_num,
+        orderdetail.items_id,
+        orderdetail.id orderdetailId,
+        items.`name` items_name,
+        items.detail items_detail
+        FROM
+        orders,
+        `user`,
+        orderdetail,
+        items
+        WHERE
+        orders.user_id = `user`.id
+        AND orderdetail.orders_id = orders.id
+        AND items.id = orderdetail.items_id
+    </select>
+    <!--
+
+       另外使用resultMap可以实现延迟加载，提高数据库吞吐性能
+       因为单表查询相比于多表查询效率明显要高
+       如果查询一开始就可以满足需求，一开始先查询单表，当需要关联信息的时候
+       再进行关联查询
+        下面展示如何实现延迟加载：
+        1.配置mybaits延迟加载开关
+
+
+          下面演示延迟加载，查询订单以及关联的用户信息
+          当需要用户信息的时候，再进行延迟加载-getUser()方法，向数据库发出sql
+          刚开始只查询订单信息
+     -->
+    <resultMap id="UserAndOderDetailsLazyLoadingMap" type="Orders" extends="org.shrio.mapper.OrdersMapper.BaseResultMap">
+        <!-- 配置用户信息的延迟加载
+        select延迟加载所执行的sql语句 -也就是我们执行sql所在的statement的id
+        因为我们执行的sql都是以statement进行配置的
+        如果不在同一个namespace，需要加上namespace
+        column:指定关联查询的列信息-用于关联主表的列字段
+        property:将关联查询信息放置在order的那个属性里面
+        这里演示的是一对一的延迟加载，对于一对多的延迟加载，可以在collection里面加上select属性
+        -->
+        <association property="user" select="org.shrio.mapper.UserMapper.selectByPrimaryKey" column="user_id"/>
+    </resultMap>
+    <select id="queryUserAndOderDetailsLazyLoading" resultMap="UserAndOderDetailsLazyLoadingMap">
+        SELECT
+	     orders.id,
+	     <!-- 确保关联查询的列存在-->
+	     orders.user_id,
+	     orders.number,
+	     orders.createtime,
+	     orders.note
+       FROM
+	      orders
+    </select>
+</mapper>
