@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!-- 启动触发器的配置开始 -->
+    <bean name="startQuertz" lazy-init="false" autowire="no"
+          class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers">
+            <list>
+                <ref bean="myJobTrigger" />
+            </list>
+        </property>
+        <property name="configLocation" value="classpath:Quartz/quartz.properties"/>
+    </bean>
+
+    <bean  id="jobDetasil" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <!--beanName默认id名，通过该属性显示的指定Bean名称  对应任务的名称 -->
+        <!--<property name="beanName" value=""/>-->
+        <!-- 用户可以将Spring ApplicationContext的引用
+        保存到JobDataMap里面，以便在Job的代码访问applicationContext
+        jobDetail封装了MyJob定时任务，并且为Job对应的jobDataAsMap提供了
+        一个size的数据，此外，指定applicationContextJobDataKey，
+        JobDataMap持有ApplicationContext的引用
+        这样MyJob运行的时候就可以通过JobDataMap访问到size和ApplicationContext了
+        -->
+        <!--<property name="applicationContextJobDataKey" value="applicationContext"/>-->
+        <!--<property name="jobDataAsMap">-->
+            <!--<map>-->
+                <!--<entry key="size" value="10"/>-->
+            <!--</map>-->
+        <!--</property>-->
+        <property name="durability" value="true"></property>
+        <property name="jobClass" value="org.shrio.Quartz.MySecondJob"/>
+    </bean>
+
+    <!-- 启动触发器的配置结束 -->
+
+    <!-- 调度的配置开始 -->
+    <!--
+        quartz-1.8以前的配置
+    <bean id="myJobTrigger"
+        class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail">
+            <ref bean="myJobDetail" />
+        </property>
+        <property name="cronExpression">
+            <value>0/1 * * * * ?</value>
+        </property>
+    </bean>
+    -->
+    <!-- 总管理类 如果将lazy-init='false'那么容器启动就会执行调度程序 -->
+    <!-- quartz-2.x的配置 -->
+    <bean id="myJobTrigger"
+          class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail">
+            <ref bean="jobDetasil" />
+        </property>
+        <property name="cronExpression">
+            <value>0/1 * * * * ?</value>
+        </property>
+    </bean>
+    <!-- 调度的配置结束 -->
+
+
+    <!-- job的配置开始
+     使用方法方式 将一个方法包装成job
+
+     使用QuartzJobBean，需要继承。而使用MethodInvokeJobDetailFactoryBean则需要指定targetObject（任务实例）和targetMethod（实例中要执行的方法）
+
+后者优点是无侵入，业务逻辑简单，一目了然，缺点是无法持久化（目前还不太清楚这点!）
+
+从我使用的经验来说，我更推荐的第二种，其中一个很重要的原因就是因为定时任务中注入相关Service的时候，后者可以直接注入，而前者还需要进行Schedular的替换修改。
+    -->
+    <bean id="myJobDetail"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject">
+            <ref bean="myJob" />
+        </property>
+        <property name="targetMethod">
+            <value>work</value>
+        </property>
+    </bean>
+    <!-- job的配置结束 -->
+    <!-- 工作的bean -->
+    <bean id="myJob" class="org.shrio.Quartz.job.MyJob" />
+</beans>

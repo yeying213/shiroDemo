@@ -1,0 +1,36 @@
+Quartz主要用于时间任务调度
+
+就那论坛而言：
+ 每次隔上半个小时就会生成精华文章的Rss文件，每次凌晨统计论坛用户的积分排名
+ 每隔30分钟执行锁定过期的用户进行解锁
+   核心类：
+     1.Job:是一个接口，只有一个方法void execute(JobExecution context),开发者实现该接口需要
+     实现需要执行的任务
+     2.JobDetail：Quartz:在每次执行Job的时候，都会重新生成一个Job实例，所以他不是直接接受
+     一个Job的实例，而是接收一个Job的实现类，以便于运行时候通过newInstacnce()的反射调用
+     来实例化Job，因此它需要一个类来描述Job的实现类以及其他相关的静态信息，如Job名称
+     、描述、关联监听器等等信息，JobDetail承担了这一个角色，
+     3.Trigger:用于描述时间的触发规则
+     4.Calender 是一个日历特定的时间点的集合
+     5.Shelduer：代表一个独立的运行时容器，Trigger和JobDetail可以注册到
+     Scheduler里面，两者在Shelduler里面拥有各自的组和名称，组以及名称是Shelduler查找
+     容器里面某一个对象的唯一依据，Trigger的组和名称的组合必须唯一，JobDetail的组和名称组和也必须唯一，
+     Schelder可以将Trigger绑定到某一个JobDetail里面，这样当Trigger被触发的时候，对应的Job就会被执行
+     ，一个Job可以对应多个Trrigger,但是一个Trrigger只能对应一个Job,
+     6.ThreadPool：Scheduler使用一个线程池作为任务运行的基础设施，任务通过
+     共享线程池里面的线程提高运行效率.
+     可以通过ScheduleFactory创建一个Sheduler实例，Sheduler拥有一个ShedulerContext,保存着Sheduler的上下文
+     信息，Job和Trriger都可以访问到SheduleContext内的信息，ShedulerContext内部通过一个Map,
+     以键值对的方式维护这些上下文数据，SheduleContext为保存和获取数据提供了多个put和getXXX()方法
+      ThreadPool：Scheduer通过一个线程池作为任务运行的基础设施，任务通过共享线程池里面的线程来提高运行效率
+     CronTrriger 调度规则基于Cron表达式
+
+
+调度的任务信息的存储：
+  默认的情况下,Quatrz将任务调度的运行信息保存在内存里面
+  这种情况提供了最佳的性能，但是不能持久化
+  当程序中途停止或者崩溃，所有的运行信息都会消失
+Spring为创建Quartz的Scheluler、Trigger和JobDetail提供了便利的FactoryBean类
+以方便能够在Spring容器里面享受注入的好处。此外，Spring还提供了便利的工具类
+直接方便将Spring里面的bean包装成合法的任务
+

@@ -27,6 +27,9 @@
         <servlet-name>ServeltDispather</servlet-name>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
+    <error-page>
+        <location>/static/view/404.html</location>
+    </error-page>
     <!-- 是一个ServletContextListener,他通过
     ContextConfigution参数所指定的spring文件配置项目
     来启动“业务层”Spring容器

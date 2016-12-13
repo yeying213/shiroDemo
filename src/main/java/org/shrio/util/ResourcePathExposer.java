@@ -1,8 +1,6 @@
 package org.shrio.util;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.ServletContextAware;
 import javax.servlet.ServletContext;
-
 /**
  * Created by Administrator on 2016/12/11.
  *
@@ -10,7 +8,7 @@ import javax.servlet.ServletContext;
  *   ServletContext的引用注入进来
  */
 
-public class ResourcePathResolver implements ServletContextAware {
+public class ResourcePathExposer implements ServletContextAware {
     private ServletContext servletContext;
     private String resourceRoot;
     public void init(){
@@ -18,19 +16,19 @@ public class ResourcePathResolver implements ServletContextAware {
         //发布版本号，在此获取之，此处仅仅是提供一个模拟值，
         resourceRoot="/resources_"+version;//将资源的逻辑路径加上发布的版本号
         //将资源的逻辑路径暴漏在ServletContext的属性列表中
-        getServletContext().setAttribute("resourceRoot",getServletContext().getContextPath()+resourceRoot);
+
+        getServletContext().setAttribute("resourceRoot",resourceRoot);
+        System.out.println(getResourceRoot()+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
     }
 
     public ServletContext getServletContext() {
         return servletContext;
     }
-
-    public void setServletContext(ServletContext servletContext) {
-        this.servletContext = servletContext;
-    }
-
     public String getResourceRoot() {
         return resourceRoot;
     }
 
+    public void setServletContext(ServletContext servletContext) {
+        this.servletContext=servletContext;
+    }
 }

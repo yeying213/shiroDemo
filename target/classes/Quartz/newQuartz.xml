@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="simpleTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+        <property name="jobDetail" ref="jobDetasil" />
+        <property name="startDelay" value="3000" />
+        <property name="repeatInterval" value="2000" />
+    </bean>
+    <bean  id="jobDetasil" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+        <!--beanName默认id名，通过该属性显示的指定Bean名称  对应任务的名称 -->
+        <!--<property name="beanName" value=""/>-->
+        <!-- 用户可以将Spring ApplicationContext的引用
+        保存到JobDataMap里面，以便在Job的代码访问applicationContext
+        jobDetail封装了MyJob定时任务，并且为Job对应的jobDataAsMap提供了
+        一个size的数据，此外，指定applicationContextJobDataKey，
+        JobDataMap持有ApplicationContext的引用
+        这样MyJob运行的时候就可以通过JobDataMap访问到size和ApplicationContext了
+        -->
+        <!--<property name="applicationContextJobDataKey" value="applicationContext"/>-->
+        <!--<property name="jobDataAsMap">-->
+        <!--<map>-->
+        <!--<entry key="size" value="10"/>-->
+        <!--</map>-->
+        <!--</property>-->
+        <property name="durability" value="true"></property>
+        <property name="jobClass" value="org.shrio.Quartz.MySecondJob"/>
+    </bean>
+    <bean id="startQuert" lazy-init="false" autowire="no" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <!-- 管理trigger -->
+        <property name="triggers">
+            <list>
+                <ref bean="simpleTrigger" />
+            </list>
+        </property>
+    </bean>
+</beans>

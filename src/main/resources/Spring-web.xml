@@ -62,11 +62,69 @@ DefaultHandlerExceptionResolver
             <bean class="org.springframework.http.converter.FormHttpMessageConverter"/>
         </mvc:message-converters>
     </mvc:annotation-driven>
+    <!--装配拦截器
+     当收到请求的时候，DispatherServlet会将请求交给HandlerMapping，让它找出应该请求的HandlerExecutionChain对象
+     HandlerExecutionChain是一个执行链，它包含一个处理请求的处理器Handler,同时包含若干个对该请求进行拦截的
+     拦截器。当HandlerMapping返回HandlerExecutionChain后，DispatherServlet将会将请求交给定义在
+     HandlerExecution里面的拦截器和处理器统一进行处理
+     总而言之HandlerExecutionChain是负责处理请求并返回ModelAndView对象的
+     位于处理器末端的是一个Handler,HandlerAdapter对Handler进行统一封装，并按照统一的
+     适配器接口对Handler处理方法进行调用
+     可以在interceptors里面配置多个拦截器，每个拦截器都可以指定一个匹配的映射路径，来限制拦截器的作用范围
+    -->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!-- 当然也可以用正则表达式对多个请求进行拦截处理-->
+            <mvc:mapping path="/ss"/>
+            <mvc:mapping path="/us"/>
+            <!-- -装配好自定义的拦截器类-->
+            <bean class="org.shrio.Interceptor.VerificationInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+    <!-- 配置全局异常处理器-->
+    <bean class="org.shrio.Exception.CustomExceptionResolver"/>
     <!-- 2静态资源处理配置
     1.加入对静态资源的处理，因为我们配置为拦截所有的请求，而有些静态资源找不到对应的handler
-    2.允许使用“/”做整体映射
+    2.允许使用“/”做整体映射~~~~~~~~~~~~支持RestFulApi风格的映射，则Spring MVC将会捕获Web容器的所有的请求
+    ，包括静态资源请求，如果不对静态资源进行单独的处理，则Spring MVC则会由于找不到对应的Handler而导致错误
+
+    会在Spring上下文里面定义一个DefaultServletHttpReqestHandler,
+    他会像一个检查员，对进入DispatherServlet的URL进行筛查，如果发现是静态资源，那么
+    就会将该请求转交给web服务器默认的Servlet进行处理，如果不是静态的资源，才会由DispatherServlet进行继续处理
+
+    除此之外，还可以配置采用 <mvc:resources/>来处理，它会由SpringMVC框架自己处理静态资源，并且添加一些有用
+    的附加值功能。 首先， <mvc:resources/>允许静态资源放在任何的位置，如在WEB-INF目录下，类路径下等。通过location属性指定
+    静态资源的位置，由于location的属性是Resource类型，因此可以使用诸如"claspath:"等前缀。传统的web容器的资源只能够放在
+    web容器的根路径下，而 <mvc:resources/>打破了这个界限。使用浏览器缓存的数据，而非
+    将静态资源的输到浏览器端，以充分节省带宽，来提高程序的性能。
+    在接收静态资源的请求的时候，会先检查请求头的last-modified属性，如果静态资源没有
+    发生变化，则直接返回303响应状态码，指示客户端
+
     -->
-    <mvc:default-servlet-handler/>
+    <!--<mvc:default-servlet-handler/>-->
+    <!-- 下面配置将/static/"的目录映射为/resources路径，假设web根路径下拥有images.js的资源，则可以通过/resources/images.js来
+    访问
+    同时在静态的页面部分也可以通过逻辑映射路径来引用外部资源文件
+    如<script src="/resouces/js/my.js"></script>
+    同时mvc:resources可以将多个路径映射为一个逻辑路径，因此一个用逻辑路径表示的资源在多个物理路径下面都存在，
+    对于这个问题，mvc:resources只要在一个路径下面找到匹配的资源之后就会返回，查找的顺序和物理路径
+    在location中的配置顺序一致。
+    设置在浏览器缓存的时间，一般情况下cache-periods设置为缓存一年，以充分利用客户端的缓存数据
+    引用
+    需要注意的是，当我们发布新的版本的时候，由于浏览器的缓存机制，客户端不会从服务端下载新的
+    静态资源，一个好的解决方案是 网页里面引用静态资源的路径添加上发布的版本号，
+    这样当部署发布新的版本的时候，由于版本号的变化从而造成网页路径发生改变，因此客户端浏览器就会去下载
+    这个新的资源，而不是利用缓存的数据，针对这个解决思路，我们可以使用mvc:resources的静态逻辑给出一个通用的解决方案
+    客户端浏览器就会下载“这个资源，
+    -->
+    <bean id="rpe" class="org.shrio.util.ResourcePathExposer" init-method="init"/>
+    <!-- 使用spel表达式来获取属性，这里利用Spel表达式引用ResourcePathResolver的resourceRoot属性，
+    生成动态的静态资源逻辑路径
+    响应的我们我们调整网页里面引用静态资源的方式
+    ${resourceRoot}/js/my.js
+
+    -->
+    <mvc:resources mapping="#{rpe.resourceRoot}/**" location="/static/" cache-period="3153600"/>
     <!-- 配置ViewResolver。 可以用多个ViewResolver。 使用order属性排序。
     InternalResourceViewResolver放在最后。
     RESTful服务中很重要的一个特性即是同一资源,多种表述我们使用ContentNegotiatingViewResolver就可以做到，
@@ -94,7 +152,7 @@ DefaultHandlerExceptionResolver
     能映射静态资源（当Spring Web MVC框架没有处理请求对应的控制器时（如一些静态资源），
     转交给默认的Servlet来响应静态文件，否则报404找不到资源错误，）。
     -->
-    <mvc:default-servlet-handler/>
+    <!--<mvc:default-servlet-handler/>-->
     <!-- 该视图解析器 不负责具体的视图的解析，而是作为一个中间人的角色根据请求处理
      所要求的MIME类型，从上下文里面选择一个合适的视图解析器，再将视图解析工作委托其职责
      每个视图解析器都实现了一个Order接口，开放出一个orderNo属性，可以通过orderNo属性来指定
