@@ -15,5 +15,7 @@
 UserName:${User.userID }
 <br />
 Age: ${User.userName}
+
+${user}
 </body>
 </html>

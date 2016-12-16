@@ -33,5 +33,15 @@
                 <ref bean="simpleTrigger" />
             </list>
         </property>
+        <!-- 通过map类型设置SheduleContext数据
+        保存着Shedule的上下文信息，Job和Trigger都可以进行访问
+        -->
+        <property name="schedulerContextAsMap">
+            <map>
+                <entry key="timeout" value="30"/>
+            </map>
+        </property>
+        <!-- 显示的指定quartz的配置文件地址-->
+        <property name="configLocation" value="classpath:Quartz/quartz.properties"/>
     </bean>
 </beans>

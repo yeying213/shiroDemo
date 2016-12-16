@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:annation="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <annation:config/>
+    <!--
+     研究的是<mvc:annotation-driven/>标签，所以我们找到对应的实现类是org.springframework.web.servlet.config.AnnotationDrivenBeanDefinitionParser。
+    通过阅读类注释文档，我们发现这个类主要是用来向工厂中注册了
+
+RequestMappingHandlerMapping
+
+BeanNameUrlHandlerMapping
+
+RequestMappingHandlerAdapter
+
+HttpRequestHandlerAdapter
+
+SimpleControllerHandlerAdapter
+
+ExceptionHandlerExceptionResolver
+
+ResponseStatusExceptionResolver
+
+DefaultHandlerExceptionResolver
+
+    -->
+    <!-- 装配好FreeMaker基础设施-->
+    <bean id="castorMarshaller" class="org.springframework.oxm.castor.CastorMarshaller"/>
+    <mvc:annotation-driven conversion-service="formattingConversionService">
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
+            <bean class="org.springframework.http.converter.ResourceHttpMessageConverter"/>
+            <!-- 读写二进制数据
+             其中T为 byte[]类型，可读取所有请求类型，可以通过设置supported指定媒体类型
+             响应的媒体类型为application/octet-stream
+            -->
+            <bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter">
+                <property name="defaultCharset" value="UTF-8"/>
+            </bean>
+            <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter"/>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <!--是否对输出的格式数据进行美化 -->
+                <property name="prettyPrint" value="true"></property>
+                <property name="objectMapper">
+                    <bean class="com.fasterxml.jackson.databind.ObjectMapper">
+                        <property name="dateFormat">
+                            <bean class="java.text.SimpleDateFormat">
+                                <constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss" />
+                            </bean>
+                        </property>
+                    </bean>
+                </property>
+            </bean>
+            <!-- 将java对象转化成xml,或者将xml解析成java,读写xml信息
+             响应类型为text/html. application/xml
+            -->
+            <bean class="org.springframework.http.converter.xml.MarshallingHttpMessageConverter">
+                <property name="marshaller" ref="castorMarshaller"></property>
+            </bean>
+            <bean class="org.springframework.http.converter.FormHttpMessageConverter"/>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <!--装配拦截器
+     当收到请求的时候，DispatherServlet会将请求交给HandlerMapping，让它找出应该请求的HandlerExecutionChain对象
+     HandlerExecutionChain是一个执行链，它包含一个处理请求的处理器Handler,同时包含若干个对该请求进行拦截的
+     拦截器。当HandlerMapping返回HandlerExecutionChain后，DispatherServlet将会将请求交给定义在
+     HandlerExecution里面的拦截器和处理器统一进行处理
+     总而言之HandlerExecutionChain是负责处理请求并返回ModelAndView对象的
+     位于处理器末端的是一个Handler,HandlerAdapter对Handler进行统一封装，并按照统一的
+     适配器接口对Handler处理方法进行调用
+     可以在interceptors里面配置多个拦截器，每个拦截器都可以指定一个匹配的映射路径，来限制拦截器的作用范围
+    -->
+    <!--<mvc:interceptors>-->
+        <!--<mvc:interceptor>-->
+            <!--&lt;!&ndash; 当然也可以用正则表达式对多个请求进行拦截处理-->
+            <!--/**可以拦截路径不管多少层-->
+            <!--&ndash;&gt;-->
+            <!--<mvc:mapping path="/ss"/>-->
+            <!--<mvc:mapping path="/us"/>-->
+            <!--<mvc:mapping path="/**"/>-->
+            <!--&lt;!&ndash; -装配好自定义的拦截器类&ndash;&gt;-->
+            <!--<bean class="org.shrio.Interceptor.LoginInterceptor"/>-->
+        <!--</mvc:interceptor>-->
+    <!--</mvc:interceptors>-->
+    <!-- 整合shiro,
+    1.在web.xml里面配置shiro的fiflter  对url进行拦截
+    2.filter过滤之后，会将操作权交给spring里面的过滤链条
+
+    -->
+    <!-- 配置全局异常处理器-->
+    <bean class="org.shrio.Exception.CustomExceptionResolver"/>
+    <!-- 2静态资源处理配置
+    1.加入对静态资源的处理，因为我们配置为拦截所有的请求，而有些静态资源找不到对应的handler
+    2.允许使用“/”做整体映射~~~~~~~~~~~~支持RestFulApi风格的映射，则Spring MVC将会捕获Web容器的所有的请求
+    ，包括静态资源请求，如果不对静态资源进行单独的处理，则Spring MVC则会由于找不到对应的Handler而导致错误
+
+    会在Spring上下文里面定义一个DefaultServletHttpReqestHandler,
+    他会像一个检查员，对进入DispatherServlet的URL进行筛查，如果发现是静态资源，那么
+    就会将该请求转交给web服务器默认的Servlet进行处理，如果不是静态的资源，才会由DispatherServlet进行继续处理
+
+    除此之外，还可以配置采用 <mvc:resources/>来处理，它会由SpringMVC框架自己处理静态资源，并且添加一些有用
+    的附加值功能。 首先， <mvc:resources/>允许静态资源放在任何的位置，如在WEB-INF目录下，类路径下等。通过location属性指定
+    静态资源的位置，由于location的属性是Resource类型，因此可以使用诸如"claspath:"等前缀。传统的web容器的资源只能够放在
+    web容器的根路径下，而 <mvc:resources/>打破了这个界限。使用浏览器缓存的数据，而非
+    将静态资源的输到浏览器端，以充分节省带宽，来提高程序的性能。
+    在接收静态资源的请求的时候，会先检查请求头的last-modified属性，如果静态资源没有
+    发生变化，则直接返回303响应状态码，指示客户端
+
+    -->
+    <!--<mvc:default-servlet-handler/>-->
+    <!-- 下面配置将/static/"的目录映射为/resources路径，假设web根路径下拥有images.js的资源，则可以通过/resources/images.js来
+    访问
+    同时在静态的页面部分也可以通过逻辑映射路径来引用外部资源文件
+    如<script src="/resouces/js/my.js"></script>
+    同时mvc:resources可以将多个路径映射为一个逻辑路径，因此一个用逻辑路径表示的资源在多个物理路径下面都存在，
+    对于这个问题，mvc:resources只要在一个路径下面找到匹配的资源之后就会返回，查找的顺序和物理路径
+    在location中的配置顺序一致。
+    设置在浏览器缓存的时间，一般情况下cache-periods设置为缓存一年，以充分利用客户端的缓存数据
+    引用
+    需要注意的是，当我们发布新的版本的时候，由于浏览器的缓存机制，客户端不会从服务端下载新的
+    静态资源，一个好的解决方案是 网页里面引用静态资源的路径添加上发布的版本号，
+    这样当部署发布新的版本的时候，由于版本号的变化从而造成网页路径发生改变，因此客户端浏览器就会去下载
+    这个新的资源，而不是利用缓存的数据，针对这个解决思路，我们可以使用mvc:resources的静态逻辑给出一个通用的解决方案
+    客户端浏览器就会下载“这个资源，
+    -->
+    <bean id="rpe" class="org.shrio.util.ResourcePathExposer" init-method="init"/>
+    <!-- 使用spel表达式来获取属性，这里利用Spel表达式引用ResourcePathResolver的resourceRoot属性，
+    生成动态的静态资源逻辑路径
+    响应的我们我们调整网页里面引用静态资源的方式
+    ${resourceRoot}/js/my.js
+
+    -->
+    <mvc:resources mapping="#{rpe.resourceRoot}/**" location="/static/" cache-period="3153600"
+    />
+    <mvc:resources mapping="/error/**" location="/WEB-INF/error/"/>
+
+    <!-- 配置ViewResolver。 可以用多个ViewResolver。 使用order属性排序。
+    InternalResourceViewResolver放在最后。
+    RESTful服务中很重要的一个特性即是同一资源,多种表述我们使用ContentNegotiatingViewResolver就可以做到，
+    这个视图解析器允许你用同样的内容数据来呈现不同的view
+    accept header,扩展名以及参数这三种方式
+    第一种使用扩展名：
+    http://www.test.com/user.xml    呈现xml文件
+    http://www.test.com/user.json    呈现json格式
+    http://www.test.com/user       使用默认view呈现，比如jsp等
+
+    方式2  使用http request header的Accept
+         GET /user HTTP/1.1
+         Accept:application/xml
+         GET /user HTTP/1.1
+         Accept:application/json
+     方式3  使用参数
+     http://www.test.com/user?format=xml
+     http://www.test.com/user?format=json
+     ….
+    -->
+    <!-- 2静态资源处理配置
+    1.加入对静态资源的处理，因为我们配置为拦截所有的请求，而有些静态资源找不到对应的handler
+    2.允许使用“/”做整体映射
+    当在web.xml 中DispatcherServlet使用<url-pattern>/</url-pattern> 映射时，
+    能映射静态资源（当Spring Web MVC框架没有处理请求对应的控制器时（如一些静态资源），
+    转交给默认的Servlet来响应静态文件，否则报404找不到资源错误，）。
+    -->
+    <!--<mvc:default-servlet-handler/>-->
+    <!-- 该视图解析器 不负责具体的视图的解析，而是作为一个中间人的角色根据请求处理
+     所要求的MIME类型，从上下文里面选择一个合适的视图解析器，再将视图解析工作委托其职责
+     每个视图解析器都实现了一个Order接口，开放出一个orderNo属性，可以通过orderNo属性来指定
+     视图的优先级，orderNo值越小优先级越高，有些视图解析器默认为最低级别如InterViewResolver
+     SpringMVC会按照视图解析器的优先级别顺序对逻辑视图名进行解析，直到解析成功并返回视图对象，否则抛出
+     ServletException异常
+    -->
+    <bean id="contentNegotiationManager" class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+        <property name="ignoreAcceptHeader" value="false"/>
+        <property name="favorPathExtension" value="true"/>
+        <property name="defaultContentType" value="text/html"/>
+        <property name="favorParameter" value="true"/>
+        <property name="mediaTypes">
+            <map>
+                <entry key="xml" value="application/xml"/>
+                <entry key="json" value="application/json"/>
+                <entry key="xls" value="application/vnd.ms-excel"/>
+            </map>
+        </property>
+        <!--
+         这里是是否启用扩展名支持，默认就是true
+         例如  /user/{userid}.json
+        -->
+        <!--<property name="favorPathExtension" value="true"/>-->
+        <!--这里是是否启用参数支持，默认就是true-->
+        <!--例如  /user/{userid}?format=json-->
+        <!--<property name="favorParameter" value="true"/>-->
+        <!--这里是否忽略掉accept header，默认就是false-->
+        <!--例如     GET /user HTTP/1.1-->
+        <!--Accept:application/json-->
+        <!--<property name="ignoreAcceptHeader" value="true"/>-->
+        <!-- 如果所有的mediaType都没匹配上，就会使用defaultContentType
+        <property name="defaultContentType" value="TEXT_HTML"/>
+        -->
+    </bean>
+    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <property name="contentNegotiationManager" ref="contentNegotiationManager"/>
+        <property name="viewResolvers">
+            <list>
+                <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+                    <property name="prefix" value="/WEB-INF/jsp/"/>
+                    <property name="suffix" value=".jsp"/>
+                    <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+                </bean>
+            </list>
+        </property>
+        <property name="defaultViews">
+            <list>
+                <!-- JSON View -->
+                <!-- <property name="extractValueFromSingleKeyModel" value="true"/> -->
+                <bean class="com.alibaba.fastjson.support.spring.FastJsonJsonView">
+                    <!-- <property name="extractValueFromSingleKeyModel" value="true"/> -->
+                    <property name="charset" value="UTF-8"/>
+                </bean>
+                <bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+                    <constructor-arg ref="castorMarshaller">
+                    </constructor-arg>
+                </bean>
+                <!-- 自定义特定的视图解析技术  或者引入第三方库
+                <bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+                    <constructor-arg ref="jaxb2Marshaller">
+
+                    </constructor-arg>
+                </bean>
+                <bean class="org.springframework.web.servlet.view.xml.MarshallingView">
+                    <constructor-arg ref="jaxb2Marshaller">
+
+                    </constructor-arg>
+                </bean>
+                <bean class="com.wonders.stpt.bid.controller.JXLExcelView"/>
+                -->
+            </list>
+        </property>
+    </bean>
+    <!-- 国际化-->
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basenames">
+            <list>
+                <value>i18n.message</value>
+                <value>i18n.anonymousURL</value>
+                <value>i18n.commonURL</value>
+            </list>
+        </property>
+        <!-- 资源文件编码格式 -->
+        <property name="fileEncodings" value="utf-8" />
+        <!-- 对资源文件内容缓存时间，单位秒 -->
+        <property name="cacheSeconds" value="120" />
+    </bean>
+    <!-- 格式转换器
+     完成不同Java类型之间的转换
+    -->
+    <bean id="formattingConversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <bean class="org.shrio.conventer.CustomDateConverter"/>
+                <bean class="org.shrio.conventer.StringTrimConverter"/>
+                <bean class="org.shrio.conventer.StringToUserConventer"/>
+            </set>
+        </property>
+    </bean>
+    <!-- 错误信息处理-->
+    <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+        <property name="exceptionMappings">
+            <map>
+                <entry key="ResourceNotFoundException" value="common/error/resourceNotFoundError" />
+                <entry key=".DataAccessException" value="common/error/dataAccessError" />
+            </map>
+        </property>
+        <property name="statusCodes">
+            <map>
+                <entry key="common/error/resourceNotFoundError" value="404" />
+                <entry key="common/error/dataAccessError" value="500" />
+            </map>
+        </property>
+    </bean>
+
+
+    <!-- 扫描web相关的配置-->
+    <context:component-scan base-package="org.shrio.controller"/>
+</beans>

@@ -1,5 +1,8 @@
 package org.shrio.controller;
 
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
+import org.shrio.model.ActiveUser;
 import org.shrio.model.User;
 import org.shrio.vo.ShowDemo;
 import org.springframework.core.io.ClassPathResource;
@@ -165,4 +168,40 @@ public class MutiViewTestController {
         modelMap.addAttribute(showDemos);
         return "userListftl";
     }
+
+    /**
+     * 请求：http://localhost:8081/shiroDemo/handle56?user=tom:xian:nan
+     * 输出：
+     *    {
+          "user": {
+             "address": "xian",
+              "sex": "nan",
+              "username": "tom"
+                  }
+          }
+     * @param user
+     * @param modelMap
+     * @return
+     */
+    @RequestMapping(value = "/handle56",produces = {"application/json"})
+    public String handle81(@RequestParam("user") User user,ModelMap modelMap){
+        modelMap.put("user",user);
+        return "demo";
+    }
+    //系统首页
+    @RequestMapping("/first")
+    public String sys_pageIndex(ModelMap modelMap)
+    {
+        //从shiro的subject里面 获取activiuser  --session里面
+        Subject subject= SecurityUtils.getSubject();//取出当前的认证用户信息
+         //取出身份信息
+      ActiveUser activeUser= (ActiveUser) subject.getPrincipal();
+        modelMap.addAttribute("activeUser",activeUser);
+      return "first";
+    }
+    @RequestMapping("/welcome")
+    public String welcomePage(){
+        return "welcome";
+    }
+
 }

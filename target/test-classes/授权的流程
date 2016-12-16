@@ -1,0 +1,11 @@
+1.对subject进行授权
+调用方法isPermitted("perssion串");进行权限认证
+2.SecurityMannager进行授权，通过MoudleRealmAuthorition执行授权
+3.MoudleRealmAuthorition执行自定义ream（自定义customRealm）从数据库这里查询权限数据
+4.realm从数据库查询权限数据，返回MoudleRealmAuthorizer
+5.MoudleRealmAuthorizer进行调用PessionReslover权限过滤
+6.如果比对通过---isPermitted("perssion串")里面的权限串在realm从数据库查询的权限数据里面
+说明用户访问具有权限
+否则没有权限 抛出异常
+
+

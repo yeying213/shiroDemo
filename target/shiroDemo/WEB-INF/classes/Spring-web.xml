@@ -28,7 +28,7 @@ DefaultHandlerExceptionResolver
     -->
     <!-- 装配好FreeMaker基础设施-->
     <bean id="castorMarshaller" class="org.springframework.oxm.castor.CastorMarshaller"/>
-    <mvc:annotation-driven>
+    <mvc:annotation-driven conversion-service="formattingConversionService">
         <mvc:message-converters>
             <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
             <bean class="org.springframework.http.converter.ResourceHttpMessageConverter"/>
@@ -74,11 +74,14 @@ DefaultHandlerExceptionResolver
     -->
     <mvc:interceptors>
         <mvc:interceptor>
-            <!-- 当然也可以用正则表达式对多个请求进行拦截处理-->
+            <!-- 当然也可以用正则表达式对多个请求进行拦截处理
+            /**可以拦截路径不管多少层
+            -->
             <mvc:mapping path="/ss"/>
             <mvc:mapping path="/us"/>
+            <mvc:mapping path="/**"/>
             <!-- -装配好自定义的拦截器类-->
-            <bean class="org.shrio.Interceptor.VerificationInterceptor"/>
+            <bean class="org.shrio.Interceptor.LoginInterceptor"/>
         </mvc:interceptor>
     </mvc:interceptors>
     <!-- 配置全局异常处理器-->
@@ -124,7 +127,10 @@ DefaultHandlerExceptionResolver
     ${resourceRoot}/js/my.js
 
     -->
-    <mvc:resources mapping="#{rpe.resourceRoot}/**" location="/static/" cache-period="3153600"/>
+    <mvc:resources mapping="#{rpe.resourceRoot}/**" location="/static/" cache-period="3153600"
+    />
+    <mvc:resources mapping="/error/**" location="/WEB-INF/error/"/>
+
     <!-- 配置ViewResolver。 可以用多个ViewResolver。 使用order属性排序。
     InternalResourceViewResolver放在最后。
     RESTful服务中很重要的一个特性即是同一资源,多种表述我们使用ContentNegotiatingViewResolver就可以做到，
@@ -228,11 +234,48 @@ DefaultHandlerExceptionResolver
         </property>
     </bean>
     <!-- 国际化-->
-    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
-        <property name="basename" value="i18n.message"/>
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basenames">
+           <list>
+               <value>i18n.message</value>
+               <value>i18n.anonymousURL</value>
+               <value>i18n.commonURL</value>
+           </list>
+        </property>
+        <!-- 资源文件编码格式 -->
+        <property name="fileEncodings" value="utf-8" />
+        <!-- 对资源文件内容缓存时间，单位秒 -->
+        <property name="cacheSeconds" value="120" />
     </bean>
-    <!-- 格式转换器-->
-    <bean id="formattingConversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean"/>
+    <!-- 格式转换器
+     完成不同Java类型之间的转换
+    -->
+    <bean id="formattingConversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <bean class="org.shrio.conventer.CustomDateConverter"/>
+                <bean class="org.shrio.conventer.StringTrimConverter"/>
+                <bean class="org.shrio.conventer.StringToUserConventer"/>
+            </set>
+        </property>
+    </bean>
+    <!-- 错误信息处理-->
+    <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+        <property name="exceptionMappings">
+            <map>
+                <entry key="ResourceNotFoundException" value="common/error/resourceNotFoundError" />
+                <entry key=".DataAccessException" value="common/error/dataAccessError" />
+            </map>
+        </property>
+        <property name="statusCodes">
+            <map>
+                <entry key="common/error/resourceNotFoundError" value="404" />
+                <entry key="common/error/dataAccessError" value="500" />
+            </map>
+        </property>
+    </bean>
+
+
     <!-- 扫描web相关的配置-->
     <context:component-scan base-package="org.shrio.controller"/>
 </beans>

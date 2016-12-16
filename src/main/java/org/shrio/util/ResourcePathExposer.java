@@ -17,7 +17,7 @@ public class ResourcePathExposer implements ServletContextAware {
         resourceRoot="/resources_"+version;//将资源的逻辑路径加上发布的版本号
         //将资源的逻辑路径暴漏在ServletContext的属性列表中
 
-        getServletContext().setAttribute("resourceRoot",resourceRoot);
+        getServletContext().setAttribute("resourceRoot",getServletContext().getContextPath()+resourceRoot);
         System.out.println(getResourceRoot()+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
     }
 
