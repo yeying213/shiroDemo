@@ -56,7 +56,6 @@
 			$('#modifypwd').click(menuclick);
 
 		});
-
 		//退出系统方法
 		function logout() {
 			_confirm('您确定要退出本系统吗?',null,
@@ -65,8 +64,6 @@
 					}
 			)
 		}
-
-
 		//帮助
 		function showhelp(){
 			window.open('${baseurl}/help/help.html','帮助文档');
@@ -124,28 +121,28 @@
 			</ul>
 		</c:if>
 		<style type="text/css"> li {list-style-type:none;}</style>
-		<ul>
-			<li><div>
-				<a title="创建采购单" ref="1_1" href="#"
-				   rel="${baseurl}item/queryItem" icon="icon-log"><span
-						class="icon icon-log">&nbsp;</span><span class="nav"><a href=javascript:addTab('创建采购单','${baseurl}item/queryItem')>商品查询</a></span></a>
-			</div></li>
-			<li><div>
-				<a title="提交采购单" ref="1_1" href="#"
-				   rel="/purchasing/order/orderList.action?type=1" icon="icon-log"><span
-						class="icon icon-log">&nbsp;</span><span class="nav">提交采购单</span></a>
-			</div></li>
-			<li><div>
-				<a title="部门经理审核" ref="1_1" href="#"
-				   rel="/purchasing/order/orderList.action?type=2" icon="icon-log"><span
-						class="icon icon-log">&nbsp;</span><span class="nav">部门经理审核</span></a>
-			</div></li>
-			<li><div>
-				<a title="总经理审核" ref="1_1" href="#"
-				   rel="/purchasing/order/orderList.action?type=3" icon="icon-log"><span
-						class="icon icon-log">&nbsp;</span><span class="nav">总经理审核</span></a>
-			</div></li>
-		</ul>
+		<%--<ul>--%>
+			<%--<li><div>--%>
+				<%--<a title="创建采购单" ref="1_1" href="#"--%>
+				   <%--rel="${baseurl}item/queryItem" icon="icon-log"><span--%>
+						<%--class="icon icon-log">&nbsp;</span><span class="nav"><a href=javascript:addTab('创建采购单','${baseurl}item/queryItem')>商品查询</a></span></a>--%>
+			<%--</div></li>--%>
+			<%--<li><div>--%>
+				<%--<a title="提交采购单" ref="1_1" href="#"--%>
+				   <%--rel="/purchasing/order/orderList.action?type=1" icon="icon-log"><span--%>
+						<%--class="icon icon-log">&nbsp;</span><span class="nav">提交采购单</span></a>--%>
+			<%--</div></li>--%>
+			<%--<li><div>--%>
+				<%--<a title="部门经理审核" ref="1_1" href="#"--%>
+				   <%--rel="/purchasing/order/orderList.action?type=2" icon="icon-log"><span--%>
+						<%--class="icon icon-log">&nbsp;</span><span class="nav">部门经理审核</span></a>--%>
+			<%--</div></li>--%>
+			<%--<li><div>--%>
+				<%--<a title="总经理审核" ref="1_1" href="#"--%>
+				   <%--rel="/purchasing/order/orderList.action?type=3" icon="icon-log"><span--%>
+						<%--class="icon icon-log">&nbsp;</span><span class="nav">总经理审核</span></a>--%>
+			<%--</div></li>--%>
+		<%--</ul>--%>
 	</DIV>
 </DIV>
 <DIV style="background: rgb(238, 238, 238); overflow-y: hidden;"

@@ -14,6 +14,10 @@ import org.mybatis.generator.internal.DefaultShellCallback;
 
 public class GeneratorSqlmap {
 
+	/**
+	 * http://www.cnblogs.com/zno2/p/5306218.html
+	 * @throws Exception
+	 */
 	public void generator() throws Exception{
 		List<String> warnings = new ArrayList<String>();
 		boolean overwrite = true;

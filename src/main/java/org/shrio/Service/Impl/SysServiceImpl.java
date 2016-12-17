@@ -2,6 +2,7 @@ package org.shrio.Service.Impl;
 
 import org.shrio.Exception.CustomException;
 import org.shrio.Service.SysService;
+import org.shrio.mapper.SysPermissionMapperCustom;
 import org.shrio.mapper.SysUserMapper;
 import org.shrio.model.ActiveUser;
 import org.shrio.model.SysPermission;
@@ -20,6 +21,8 @@ import java.util.List;
 public class SysServiceImpl implements SysService {
     @Autowired
     private SysUserMapper sysUserMapper;
+    @Autowired
+    private SysPermissionMapperCustom sysPermissionMapperCustom;
 
     /**
      * 认证身份
@@ -62,10 +65,10 @@ public class SysServiceImpl implements SysService {
     }
 
     public List<SysPermission> findMenuListByUserId(String userid) throws Exception {
-        return null;
+        return sysPermissionMapperCustom.findMenuListByUserId(userid);
     }
     public List<SysPermission> findPermissionListByUserId(String userid) throws Exception {
-        return null;
+        return sysPermissionMapperCustom.findPermissionListByUserId(userid);
     }
 }
 

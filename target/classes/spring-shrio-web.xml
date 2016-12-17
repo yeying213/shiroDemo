@@ -3,6 +3,7 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:annation="http://www.springframework.org/schema/aop"
+       xmlns:aop="http://www.springframework.org/schema/aop"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
     <annation:config/>
     <!--
@@ -73,16 +74,16 @@ DefaultHandlerExceptionResolver
      可以在interceptors里面配置多个拦截器，每个拦截器都可以指定一个匹配的映射路径，来限制拦截器的作用范围
     -->
     <!--<mvc:interceptors>-->
-        <!--<mvc:interceptor>-->
-            <!--&lt;!&ndash; 当然也可以用正则表达式对多个请求进行拦截处理-->
-            <!--/**可以拦截路径不管多少层-->
-            <!--&ndash;&gt;-->
-            <!--<mvc:mapping path="/ss"/>-->
-            <!--<mvc:mapping path="/us"/>-->
-            <!--<mvc:mapping path="/**"/>-->
-            <!--&lt;!&ndash; -装配好自定义的拦截器类&ndash;&gt;-->
-            <!--<bean class="org.shrio.Interceptor.LoginInterceptor"/>-->
-        <!--</mvc:interceptor>-->
+    <!--<mvc:interceptor>-->
+    <!--&lt;!&ndash; 当然也可以用正则表达式对多个请求进行拦截处理-->
+    <!--/**可以拦截路径不管多少层-->
+    <!--&ndash;&gt;-->
+    <!--<mvc:mapping path="/ss"/>-->
+    <!--<mvc:mapping path="/us"/>-->
+    <!--<mvc:mapping path="/**"/>-->
+    <!--&lt;!&ndash; -装配好自定义的拦截器类&ndash;&gt;-->
+    <!--<bean class="org.shrio.Interceptor.LoginInterceptor"/>-->
+    <!--</mvc:interceptor>-->
     <!--</mvc:interceptors>-->
     <!-- 整合shiro,
     1.在web.xml里面配置shiro的fiflter  对url进行拦截
@@ -279,8 +280,16 @@ DefaultHandlerExceptionResolver
             </map>
         </property>
     </bean>
-
-
+    <!--
+     因为shiro的注解方式的授权 是基于aop代理 ，因此需要在controller
+     里面配置aop支持
+    -->
+    <!-- 开启aop，对类支持 cglib的类代理方式-->
+    <aop:config proxy-target-class="true"/>
+    <!-- 开启shiro的注解支持-->
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
     <!-- 扫描web相关的配置-->
     <context:component-scan base-package="org.shrio.controller"/>
 </beans>

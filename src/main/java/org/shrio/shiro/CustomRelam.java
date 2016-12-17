@@ -26,10 +26,10 @@ import java.util.List;
  *   2.自定义realm完成之后，需要将realm设置到securityMananger里面
  *   通过shiro-ream.ini文件来描述完成
  *   [main]
-     #自定义realm
-     customRelam=shiroDemoTest.CustomRelam
-     #将realm设置到securityManager,相当于Spring的注入
-     securityManager.realms=$customRelam
+ #自定义realm
+ customRelam=shiroDemoTest.CustomRelam
+ #将realm设置到securityManager,相当于Spring的注入
+ securityManager.realms=$customRelam
  *
  */
 public class CustomRelam extends AuthorizingRealm {
@@ -50,13 +50,18 @@ public class CustomRelam extends AuthorizingRealm {
         //从principalCollection里面获取主身份,
         // 有目标的转化成真实的身份---doGetAuthenticationInfo()方法里面的SimpleAuthenticationInfo（）里面填充
         //的身份认证信息的类型
-        String userCode= (String) principalCollection.getPrimaryPrincipal();
+        // String userCode= (String) principalCollection.getPrimaryPrincipal();
+        //上面认证 设置的是activeUser类型的身份信息 ，下面 授权 就需要进行 设置 类似的信息  --
+        //切记 认证的身份类型信息 要和 这里授权 需要的身份信息 进行 关联 对应
+        ActiveUser activeUser= (ActiveUser) principalCollection.getPrimaryPrincipal();
         //根据身份信息 获取权限信息
         //模拟从数据库 获取到的数据
         List<String> persissionDatas=new ArrayList<String>();
         persissionDatas.add("user:create");//用户创建
         persissionDatas.add("user:update");//用户更新
         persissionDatas.add("user:add");
+        persissionDatas.add("item:query");
+        persissionDatas.add("item:edit");
         //....
         //将查询到的权限信息 返回给Authoizer
         SimpleAuthorizationInfo simpleAuthorizationInfo=new SimpleAuthorizationInfo();
@@ -81,6 +86,7 @@ public class CustomRelam extends AuthorizingRealm {
         ActiveUser activeUser=new ActiveUser();
         activeUser.setUserid("zhangsan");
         activeUser.setUsercode("zhangsan");
+        activeUser.setUsername("张三");
         //....
         List<SysPermission> menuList=null;
         //根据用户id  取出菜单

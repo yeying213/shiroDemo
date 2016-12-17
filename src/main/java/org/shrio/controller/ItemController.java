@@ -1,5 +1,6 @@
 package org.shrio.controller;
 
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.shrio.Exception.CustomException;
 import org.shrio.Service.ItemService;
 import org.shrio.model.Items;
@@ -45,7 +46,9 @@ public class ItemController {
 
 
     // 查询商品列表
+
     @RequestMapping("/queryItem")
+    @RequiresPermissions("item:query")//执行该方法 需要item:query权限
     public ModelAndView queryItem() throws Exception {
         // 商品列表
         List<Items> itemsList = itemService.findItemsList(null);
@@ -85,8 +88,10 @@ public class ItemController {
 
         return item;
     }
+   //显示修改的页面 ---get方式
 
     @RequestMapping(value = "/editItem")
+    @RequiresPermissions("item:update") //执行此方法 需要item:update这个权限
     public String editItem(@RequestParam(value = "id", required = true) Integer id,
                            Boolean status,Model model) throws Exception {
 
@@ -123,6 +128,7 @@ public class ItemController {
 
     // 商品修改提交
     @RequestMapping("/editItemSubmit")
+    @RequiresPermissions("item:update") //执行此方法 需要item:update这个权限
     public String editItemSubmit(@ModelAttribute("item") Items items, BindingResult result,
                                  MultipartFile pictureFile, Model model, HttpServletRequest request)
             throws Exception {
