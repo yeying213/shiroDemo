@@ -35,9 +35,30 @@ public class ItemsMapperTest {
         itemsMapper.insert(items);
     }
 
+    /**
+     *
+     * 整合ehcahe后的测试
+     * 第一次查询org.shrio.model.Items@11b8846
+     DEBUG [main] - Creating a new SqlSession
+     DEBUG [main] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@8fc8f4] was not registered for synchronization because synchronization is not active
+     DEBUG [main] - Cache Hit Ratio [org.shrio.mapper.ItemsMapper]: 0.5
+     DEBUG [main] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@8fc8f4]
+     第二次查询org.shrio.model.Items@11b8846
+     DEBUG [main] - Creating a new SqlSession
+     DEBUG [main] - SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@380c5a] was not registered for synchronization because synchronization is not active
+     DEBUG [main] - Cache Hit Ratio [org.shrio.mapper.ItemsMapper]: 0.6666666666666666
+     DEBUG [main] - Closing non transactional SqlSession [org.apache.ibatis.session.defaults.DefaultSqlSession@380c5a]
+     第三次查询org.shrio.model.Items@11b8846
+     * @throws Exception
+     */
     @Test
     public void selectByExample() throws Exception {
-
+        Items items=   itemsMapper.selectByPrimaryKey(1);
+        System.out.println("第一次查询"+items);
+        Items items1=   itemsMapper.selectByPrimaryKey(1);
+        System.out.println("第二次查询"+items1);
+        Items items2=   itemsMapper.selectByPrimaryKey(1);
+        System.out.println("第三次查询"+items2);
     }
 
     @Test

@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.shrio.mapper.ItemsMapper" >
+  <!-- 启用二级缓存-->
+  <!-- 启用二级缓存
+   如果 需要 对不同的mapper的缓存方案进行个性化 则 在对应的
+   mapper里面进行覆盖配置就可以了
+  -->
+  <cache type="org.mybatis.caches.ehcache.EhcacheCache">
+    <property name="timeToIdleSeconds" value="12000"/>
+    <property name="timeToLiveSeconds" value="3600"/>
+    <!-- 同ehcache参数maxElementsInMemory -->
+    <property name="maxEntriesLocalHeap" value="1000"/>
+    <!-- 同ehcache参数maxElementsOnDisk -->
+    <property name="maxEntriesLocalDisk" value="10000000"/>
+    <property name="memoryStoreEvictionPolicy" value="LRU"/>
+  </cache>
   <resultMap id="BaseResultMap" type="org.shrio.model.Items" >
     <id column="id" property="id" jdbcType="INTEGER" />
     <result column="name" property="name" jdbcType="VARCHAR" />
@@ -106,7 +120,7 @@
     </if>
   </select>
   <select id="selectByPrimaryKey" resultMap="ResultMapWithBLOBs" parameterType="java.lang.Integer" >
-    select 
+    select
     <include refid="Base_Column_List" />
     ,
     <include refid="Blob_Column_List" />
@@ -127,10 +141,10 @@
     <selectKey resultType="java.lang.Integer" keyProperty="id" order="AFTER" >
       SELECT LAST_INSERT_ID()
     </selectKey>
-    insert into items (name, price, pic, 
-      createtime, detail)
-    values (#{name,jdbcType=VARCHAR}, #{price,jdbcType=REAL}, #{pic,jdbcType=VARCHAR}, 
-      #{createtime,jdbcType=TIMESTAMP}, #{detail,jdbcType=LONGVARCHAR})
+    insert into items (name, price, pic,
+    createtime, detail)
+    values (#{name,jdbcType=VARCHAR}, #{price,jdbcType=REAL}, #{pic,jdbcType=VARCHAR},
+    #{createtime,jdbcType=TIMESTAMP}, #{detail,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="org.shrio.model.Items" >
     <selectKey resultType="java.lang.Integer" keyProperty="id" order="AFTER" >
@@ -207,11 +221,11 @@
   <update id="updateByExampleWithBLOBs" parameterType="map" >
     update items
     set id = #{record.id,jdbcType=INTEGER},
-      name = #{record.name,jdbcType=VARCHAR},
-      price = #{record.price,jdbcType=REAL},
-      pic = #{record.pic,jdbcType=VARCHAR},
-      createtime = #{record.createtime,jdbcType=TIMESTAMP},
-      detail = #{record.detail,jdbcType=LONGVARCHAR}
+    name = #{record.name,jdbcType=VARCHAR},
+    price = #{record.price,jdbcType=REAL},
+    pic = #{record.pic,jdbcType=VARCHAR},
+    createtime = #{record.createtime,jdbcType=TIMESTAMP},
+    detail = #{record.detail,jdbcType=LONGVARCHAR}
     <if test="_parameter != null" >
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -219,10 +233,10 @@
   <update id="updateByExample" parameterType="map" >
     update items
     set id = #{record.id,jdbcType=INTEGER},
-      name = #{record.name,jdbcType=VARCHAR},
-      price = #{record.price,jdbcType=REAL},
-      pic = #{record.pic,jdbcType=VARCHAR},
-      createtime = #{record.createtime,jdbcType=TIMESTAMP}
+    name = #{record.name,jdbcType=VARCHAR},
+    price = #{record.price,jdbcType=REAL},
+    pic = #{record.pic,jdbcType=VARCHAR},
+    createtime = #{record.createtime,jdbcType=TIMESTAMP}
     <if test="_parameter != null" >
       <include refid="Update_By_Example_Where_Clause" />
     </if>
