@@ -90,5 +90,12 @@
 		<input type="reset" value="取消">
 	</div>
 </form>
+<script type="text/javascript">
+	<script>
+			//动态刷新验证码 ，更新验证码位置
+	function randomcode_refresh() {
+		$.get('${baseurl}validatecode.jsp',{},function(msg){$('#randomcode').attr('src',msg)})
+	}
+</script>
 </BODY>
 </HTML>

@@ -10,6 +10,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.Date;
+import java.util.HashMap;
 
 import static org.junit.Assert.*;
 
@@ -68,7 +69,7 @@ public class ItemsMapperTest {
 
     @Test
     public void updateByExampleSelective() throws Exception {
-
+       // HashMap
     }
 
     @Test

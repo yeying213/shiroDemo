@@ -4,3 +4,14 @@ http://www.yiibai.com/spring_mvc/spring-mvc-tutorial-for-beginners.html
 
 关于Spring4.0新特性学习
 http://jinnianshilongnian.iteye.com/blog/2107205/
+
+
+Java开源爬虫框架WebCollector教程
+http://datahref.com/webcrawler
+
+
+百度富文本编辑器的使用
+http://blog.csdn.net/suwu150/article/details/51470097
+
+maven:
+mvn archetype:generate -DgroupId=org.schoolBus -DartifactId=schoolBus -DarchetypeArtifactId=maven-archetype-webapp -DarchetypeCatalog=local
